@@ -1,0 +1,52 @@
+pool:
+  vmImage: windows-latest
+  
+  
+steps:
+- checkout: self
+  persistCredentials: true
+
+
+#- script: echo Executando pipeline
+
+- task: UseDotNet@2
+  displayName: 'Use .NET Core sdk'
+  inputs:
+    packageType: 'sdk'
+    version: '8.0.x'
+    includePreviewVersions: true
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet restore'
+  inputs:
+    command: restore
+    projects: ConsoleApp1/ConsoleApp1/ConsoleApp1.csproj
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet build'
+  inputs:
+    command: build
+    publishWebProjects: false
+    projects: ConsoleApp1/ConsoleApp1/ConsoleApp1.csproj
+    arguments: '--runtime win-x64'
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet publish'
+  inputs:
+    command: publish
+    publishWebProjects: false
+    zipAfterPublish: false
+    projects: ConsoleApp1/ConsoleApp1/ConsoleApp1.csproj
+    arguments: '--configuration release --output $(Build.ArtifactStagingDirectory)/backend'
+    #arguments: '--runtime win-x64'
+
+- powershell: |
+   dir "$(Build.ArtifactStagingDirectory)\backend\ConsoleApp1"
+  displayName: 'PowerShell Script'
+
+
+- powershell: |
+   cd "$(Build.ArtifactStagingDirectory)\backend\ConsoleApp1\"
+   
+   dotnet .\ConsoleApp1.dll
+  displayName: 'PowerShell Script'
